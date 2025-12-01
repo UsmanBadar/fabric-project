@@ -2,5 +2,6 @@
 iac/environment-variables/** 
 .obsidian/
 venv/
+__pycache__
 
 wip/**
