@@ -2,9 +2,18 @@
 Helper functions for interacting with Microsoft Fabric using the Fabric CLI.
 """
 
-import sys, shutil, json, subprocess
+import sys, shutil, json, subprocess, os
 from pathlib import Path
+from dotenv import load_dotenv
 
+
+
+def load_local_env_file():
+    """
+    It loads local env file if not inside Github actions
+    """
+    if os.getenv("GITHUB_ACTIONS") == None:
+        load_dotenv()
 
 
 def set_stdout_encoding_to_utf_8() -> None:
