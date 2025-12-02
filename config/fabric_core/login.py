@@ -1,13 +1,11 @@
 """
 Method to login to Azure using Service Principal
 """
-from .utils import run_fabric_cli_command
-from dotenv import load_dotenv
+from .utils import run_fabric_cli_command, load_local_env_file
 import os
 
 
-if os.getenv("GITHUB_ACTIONS") == None:
-    load_dotenv()
+load_local_env_file()
 
 client_id = os.getenv("SPN_CLIENT_ID")
 client_secret = os.getenv("SPN_CLIENT_SECRET")
