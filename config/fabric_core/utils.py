@@ -58,7 +58,7 @@ def call_azure_fabric_rest_api(api_endpoint: str, method: str = "get",
     and returns the full process response.
     """
         
-    cmd = [get_fab_cli_executable_path(), "api", api_endpoint, "-X", method]
+    cmd = ["api", api_endpoint, "-X", method]
     if request_body:
         cmd.extend(["-i", json.dumps(request_body)])
     if audience:
@@ -67,7 +67,10 @@ def call_azure_fabric_rest_api(api_endpoint: str, method: str = "get",
         for key, value in params.items():
             cmd.extend(["-P", f"{key}={value}"])
     result = run_fabric_cli_command(cmd)
-    return result
+    if result.returncode == 0:
+        return result
+    else:
+        raise RuntimeError(f"Failed to run function call_azure_fabric_rest_api. output: {result.stderr}, return_code: {result.returncode}")
 
 
 
