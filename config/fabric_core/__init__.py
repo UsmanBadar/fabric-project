@@ -5,6 +5,7 @@ Fabric Core - Reusable modules for Microsoft Fabric CLI operations.
 from .utils import *
 from .login import login
 from .load_config import load_config_from_file
+from .capacities import check_capacity_exists, get_capacity_status, wait_for_capacity_ready, create_capacity, suspend_capacity
 
 __all__ = [
     "load_local_env_file",
@@ -13,5 +14,10 @@ __all__ = [
     "run_fabric_cli_command",
     "call_azure_fabric_rest_api",
     "login",
-    "load_config_from_file"
+    "load_config_from_file",
+    "check_capacity_exists",
+    "get_capacity_status",
+    "wait_for_capacity_ready",
+    "create_capacity", 
+    "suspend_capacity"
 ]
