@@ -52,6 +52,77 @@ def get_or_create_git_connection(git_config: dict) -> str|None:
     return None
 
 
+def update_workspace_from_git(workspace_id, workspace_name):
+    """
+    Update workspace content from Git (pull from Git).
+
+    This syncs the Git repository content into the workspace.
+    """
+    # Get Git status to retrieve remoteCommitHash
+    status_response = call_azure_fabric_rest_api(api_endpoint=f'workspaces/{workspace_id}/git/status')
+
+    if not status_response.stdout.strip():
+        print(f"  ⚠ Failed to get Git status")
+        return False
+
+    try:
+        status_json = json.loads(status_response.stdout)
+        status_code = status_json.get('status_code')
+
+        # Handle uninitialized connection
+        if status_code == 400:
+            error_text = status_json.get('text', {})
+            if error_text.get('errorCode') == 'WorkspaceGitConnectionNotInitialized':
+                print(f"  → Initializing Git connection")
+                call_azure_fabric_rest_api(api_endpoint=f'workspaces/{workspace_id}/git/initializeConnection', method="post")
+                # Retry getting status after initialization
+                status_response = call_azure_fabric_rest_api(api_endpoint=f'workspaces/{workspace_id}/git/status')
+                status_json = json.loads(status_response.stdout)
+                status_code = status_json.get('status_code')
+
+        if status_code != 200:
+            error_text = status_json.get('text', {})
+            print(f"  ⚠ Failed to get Git status: {status_code}")
+            print(f"     Error: {error_text}")
+            return False
+
+        remote_commit_hash = status_json.get('text', {}).get('remoteCommitHash')
+        if not remote_commit_hash:
+            print(f"  ⚠ No remoteCommitHash found in status")
+            return False
+    except json.JSONDecodeError:
+        print(f"  ⚠ Failed to parse Git status")
+        return False
+
+    # Update from Git using the remoteCommitHash
+    update_request = {
+        "remoteCommitHash": remote_commit_hash,
+        "conflictResolution": {
+            "conflictResolutionType": "Workspace",
+            "conflictResolutionPolicy": "PreferWorkspace"
+        },
+        "options": {"allowOverrideItems": True}
+    }
+
+    update_response = call_azure_fabric_rest_api(api_endpoint=f'workspaces/{workspace_id}/git/updateFromGit', method="post",
+        request_body=update_request)
+
+    if not update_response.stdout.strip():
+        return True  # Empty response is acceptable
+
+    try:
+        response_json = json.loads(update_response.stdout)
+        if response_json.get('status_code') in [200, 201, 202]:
+            print(f"  ✓ Updated {workspace_name} from Git")
+            return True
+    except json.JSONDecodeError:
+        pass
+
+    print(f"  ⚠ Update from Git may have failed")
+    return False
+
+
+
 def connect_workspace_to_git(workspace_id:str, workspace_name:str, directory_name:str, git_config:dict, connection_id:str)->bool:
     """
     This function connects a workspace to Github repo.
