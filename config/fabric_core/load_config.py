@@ -4,7 +4,7 @@ This file loads the YAML config file for creating the resources
 from pathlib import Path
 import yaml, os
 from string import Template
-from fabric_core import load_local_env_file
+from .utils import load_local_env_file
 
 
 load_local_env_file()
